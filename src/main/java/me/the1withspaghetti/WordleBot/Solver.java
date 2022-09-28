@@ -13,18 +13,29 @@ public class Solver {
 		this.listener = listener;
 	}
 	
+	/**
+	 *  Begins a new game of Wordle, using the set SiteEventListener and wordList for the dictionary.
+	 *  
+	 *  @param maxGuesses
+	 *  	The maximum amount of guesses to submit before giving up. Is usually 6 on the website
+	 *  @returns The last guess made before stopping the solving process, will be the answer if the game was successfully won.
+	 */
 	public char[] solveWordle(int maxGuesses) {
+		
+		// Saved game data used for making guesses
 		LinkedList<char[]> guesses = new LinkedList<>();
 		HashSet<Character> grays = new HashSet<>();
 		char[] greens = {' ',' ',' ',' ',' '};
 		char[] yellows = {' ',' ',' ',' ',' '};
+		
 		while (true) {
 			char[] guess = null;
 			int finds = 0;
 			if (guesses.isEmpty()) {
-				//guess = new String("soare").toCharArray();
+				// On the first guess, take the first word from the word list
 				guess = words.peek();
 			} else {
+				// On all other guesses, find the first word that matches the criteria
 				LinkedList<char[]> matches = findMatches(greens, new char[][] {yellows}, grays.toString().toCharArray(), maxGuesses);
 				
 				for (char[] match: matches) {
@@ -37,12 +48,14 @@ public class Solver {
 					return guess;
 				}
 			}
+			
+			// Sends the guess to the website and returns the result in the form of an int list.
 			System.out.println("Guessing "+new String(guess)+" out of "+finds);
 			int[] res = listener.sendWord(guess, guesses.size());
 			guesses.add(guess);
-			greens = new char[] {' ',' ',' ',' ',' '};
-			yellows = new char[] {' ',' ',' ',' ',' '};
 			System.out.println(new String(guess)+" retured "+printInts(res));
+			
+			// Check for a win or if the solver is out of guesses
 			if (checkAll(res)) {
 				System.out.println("----- Found Result: \""+new String(guess)+"\" on turn "+guesses.size()+" -----");
 				return guess;
@@ -50,6 +63,10 @@ public class Solver {
 				System.err.println("----- Could not find result! ----- (narrowed down to "+finds+" words)");
 				return guess;
 			}
+			
+			// Resets the green and yellow game data and inputs the new data from the received result
+			greens = new char[] {' ',' ',' ',' ',' '};
+			yellows = new char[] {' ',' ',' ',' ',' '};
 			for (int i = 0; i < 5; i++) {
 				if (res[i] == 0)
 					grays.add(guess[i]);
@@ -68,6 +85,18 @@ public class Solver {
 		}
 	}
 	
+	/**
+	 * 
+	 * @param greens 
+	 * 		A 5-long list of slots will letters for known greens and spaces for unknown.
+	 * @param yellows
+	 * 		A 5-long list of lists that contain all yellows that haven been in that slot.
+	 * @param grays
+	 * 		A list of all gray letters
+	 * @param max
+	 * 		The max amount of results to return
+	 * @return A list of all words that match the given criteria
+	 */
 	public LinkedList<char[]> findMatches(char[] greens, char[][] yellows, char[] grays, int max) {
 		LinkedList<char[]> results = new LinkedList<char[]>();
 		for (char[] test: words) {
@@ -80,6 +109,19 @@ public class Solver {
 		return results;
 	}
 	
+	/**
+	 * Takes in a test word and returns true if the word matches the criteria.
+	 * 
+	 * @param test
+	 * 		A 5-long list of chars for the word to be tested
+	 * @param greens 
+	 * 		A 5-long list of slots will letters for known greens and spaces for unknown.
+	 * @param yellows
+	 * 		A 5-long list of lists that contain all yellows that haven been in that slot.
+	 * @param grays
+	 * 		A list of all gray letters
+	 * @return a boolean, true if the test word matches the criteria, otherwise false
+	 */
 	private static boolean checkMatch(char[] test, char[] greens, char[][] yellows, char[] grays) {
 		// Checking for greens in the start for efficiency
 		for (int i = 0; i < 5; i++) {
@@ -123,12 +165,28 @@ public class Solver {
 		return true;
 	}
 	
+	/**
+	 * Takes in the result of a guess and returns true if all guesses were green
+	 * 
+	 * @param res
+	 * 		The result of a guess, a 5-long array of ints from 0 to 2
+	 * @return true if all the ints are equal to 2
+	 */
 	private static boolean checkAll(int[] res) {
 		for (int i: res)
 			if (i != 2) return false;
 		return true;
 	}
 	
+	/**
+	 * Takes in an array of ints and combines them as a string.
+	 * 
+	 * Example: {1,2,3,4,5} returns "12345"
+	 * 
+	 * @param ints
+	 * 		The array of integers to be printed
+	 * @return A String containing all the ints combined
+	 */
 	private static String printInts(int[] ints) {
 		StringBuilder str = new StringBuilder();
 		for (int i: ints)
