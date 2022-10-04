@@ -15,7 +15,8 @@ public class WordleNYT {
 	 * If an alternate site of wordle should be used to not expose today's wordle (and to loop games)
 	 */
 	public static final boolean ALT = true;
-	
+	private siteListener = new SiteEventListener();
+
 	public static void main(String[] args) throws Exception {
 		
 		WebDriverManager.chromedriver().setup();
@@ -24,7 +25,7 @@ public class WordleNYT {
 		web.get((ALT ? "https://wordle.berknation.com/" : "https://www.powerlanguage.co.uk/wordle/"));
 		
 		
-		Solver solver = new Solver(FileLoader.toLinkedList(FileLoader.loadJsonFromResource("/WordleNYT/ordered_words.json")), new SiteEventListener() {
+		Solver solver = new Solver(FileLoader.toLinkedList(FileLoader.loadJsonFromResource("/WordleNYT/ordered_words.json")), this.siteListener {
 			@Override
 			public int[] sendWord(char[] word, int row) {
 				try {
